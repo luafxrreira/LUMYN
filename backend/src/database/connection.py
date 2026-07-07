@@ -4,9 +4,9 @@ from mysql.connector import Error
 
 load_dotenv()
 
-def create_connection(max_tentativas=10, espera_segundos=3):
+def create_connection(max_attempts=10, wait_seconds=3):
     connect = None
-    for tentativa in range(1, max_tentativas + 1):
+    for attempt in range(1, max_attempts + 1):
         try:
             connect = mysql.connector.connect(
                 host = os.getenv("DB_HOST"),
@@ -20,8 +20,8 @@ def create_connection(max_tentativas=10, espera_segundos=3):
             return connect
         
         except Error as e:
-            print(f"Tentativa {tentativa}/{max_tentativas} falhou: {e}")
-            if tentativa < max_tentativas:
-                time.sleep(espera_segundos)
+            print(f"Tentativa {attempt}/{max_attempts} falhou: {e}")
+            if attempt < max_attempts:
+                time.sleep(wait_seconds)
         
     raise RuntimeError("Não foi possível conectar ao banco após várias tentativas.")
