@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: backend_core
+    environment:
+      DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD}@db_mysql:3306/${MYSQL_DATABASE}
+    env_file:
+      - .env
+    depends_on:
+      db_mysql:
+        condition: service_healthy
+    networks:
+      - app_network
+    ports:
+      - "5001:5001"
+
+  db_mysql:
+    image: mysql:9.2.0
+    container_name: db_mysql
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:3307:3306"
+    networks:
+      - app_network
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
