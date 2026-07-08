@@ -17,9 +17,16 @@ def send_message_api_logic(chat_history):
         "Content-Type": "application/json"
     }
 
+    system_instruction = {
+        "role": "system",
+        "content": "Você é o Lumyn, uma inteligência artificial prestativa, inteligente e amigável. Nunca diga que é o ChatGPT, OpenAI ou um modelo genérico. Seu nome é estritamente Lumyn."
+    }
+
+    full_messages = [system_instruction] + chat_history
+
     payload = {
         "model": "openrouter/free",
-        "messages": chat_history,
+        "messages": full_messages
         }
 
     try:
