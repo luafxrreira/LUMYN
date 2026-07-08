@@ -1,8 +1,10 @@
 import streamlit as st
-import requests, time
+import requests, os
 
-API_SEND = "http://localhost:5001/chat/send"
-API_HISTORY = "http://localhost:5001/chat/history"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5001")
+
+API_SEND = f"{BACKEND_URL}/chat/send"
+API_HISTORY = f"{BACKEND_URL}/chat/history"
 SESSION_ID = "default"
 REQUEST_TIMEOUT = 15
 
@@ -12,10 +14,19 @@ def main():
 
     if st.session_state["page"] == "home":
         st.header("LUMYN")
+        st.markdown(
+            """
+            :gray-badge[ O Lumyn é um modelo de linguagem baseado em inteligência artificial. Ele pode fornecer informações úteis,]
+            :gray-badge[mas não substitui aconselhamento profissional. Sempre verifique as informações obtidas.]
+            """
+        )
         st.markdown("---")
         with st.container(height=500, border=False):
             st.write("### Escreva, interaja, converse e tire dúvidas com o Lumyn.")
         
+            
+            st.markdown(":gray-badge[Caso a resposta tenha algum problema de tempo excedido, por favor, tente enviá-la novamente.]")
+
         initial_prompt = st.chat_input("Qual é o país com mais copas vencidas?")
         if initial_prompt:
             payload = {
@@ -66,7 +77,6 @@ def main():
                     with st.chat_message(role):
                         st.write(content)
       
-        with st.spinner("Processando sua pergunta pelo Lumyn...", show_time=True):
             follow_up_prompt = st.chat_input("Pergunte algo mais...")
             if follow_up_prompt:
                 payload = {
@@ -74,13 +84,13 @@ def main():
                     "session_id": SESSION_ID,
                     "user_id": 1
                 }
-                try:
-                    response = requests.post(API_SEND, json=payload)
-                    if response.status_code == 200:
-                        st.rerun()
-                    else:
-                        st.error("Erro ao obter resposta do servidor.")
-                except Exception as e:
-                    st.error(f"Erro ao enviar mensagem: {str(e)}")
-
+                with st.spinner("Processando sua pergunta pelo Lumyn...", show_time=True):
+                    try:
+                        response = requests.post(API_SEND, json=payload)
+                        if response.status_code == 200:
+                            st.rerun()
+                        else:
+                            st.error("Erro ao obter resposta do servidor.")
+                    except Exception as e:
+                        st.error(f"Erro ao enviar mensagem: {str(e)}")
 main()
