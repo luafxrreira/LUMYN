@@ -4,6 +4,8 @@ services:
   backend:
     build: ./backend
     container_name: backend_core
+    volumes:
+      - ./backend:/app
     environment:
       DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD}@db_mysql:3306/${MYSQL_DATABASE}
     env_file:
@@ -23,7 +25,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:3307:3306"
+      - "127.0.0.1:3306:3306"
     networks:
       - app_network
     volumes:
