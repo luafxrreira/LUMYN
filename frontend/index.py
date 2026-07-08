@@ -1,5 +1,5 @@
 import streamlit as st
-import requests
+import requests, time
 
 API_SEND = "http://localhost:5001/chat/send"
 API_HISTORY = "http://localhost:5001/chat/history"
@@ -13,7 +13,7 @@ def main():
     if st.session_state["page"] == "home":
         st.header("LUMYN")
         st.markdown("---")
-        with st.container(height=600, border=False):
+        with st.container(height=500, border=False):
             st.write("### Escreva, interaja, converse e tire dúvidas com o Lumyn.")
         
         initial_prompt = st.chat_input("Qual é o país com mais copas vencidas?")
@@ -23,15 +23,16 @@ def main():
                 "session_id": SESSION_ID,
                 "user_id": 1
             }
-            try:
-                response = requests.post(API_SEND, json=payload, timeout=REQUEST_TIMEOUT)
-                if response.status_code == 200:
-                    st.session_state["page"] = "chat"
-                    st.rerun()
-                else:
-                    st.error("Erro ao iniciar conversa com o servidor.")
-            except Exception as e:
-                st.error(f"Não foi possível conectar com o servidor: {str(e)}")
+            with st.spinner("Processando sua pergunta pelo Lumyn...", show_time=True):
+                try:
+                    response = requests.post(API_SEND, json=payload, timeout=REQUEST_TIMEOUT)
+                    if response.status_code == 200:
+                        st.session_state["page"] = "chat"
+                        st.rerun()
+                    else:
+                        st.error("Erro ao iniciar conversa com o servidor.")
+                except Exception as e:
+                    st.error(f"Não foi possível conectar com o servidor: {str(e)}")
 
     elif st.session_state["page"] == "chat":
         col1, col2 = st.columns([4, 1])
@@ -55,7 +56,7 @@ def main():
         except Exception as e:
             st.error(f"Erro ao buscar histórico: {str(e)}")
 
-        with st.container(height=600, border=False):
+        with st.container(height=500, border=False):
             if not messages:
                 st.info("Nenhuma mensagem encontrada no histórico.")
             else:
@@ -64,21 +65,22 @@ def main():
                     content = message.get("content", "")
                     with st.chat_message(role):
                         st.write(content)
-
-        follow_up_prompt = st.chat_input("Pergunte algo mais...")
-        if follow_up_prompt:
-            payload = {
-                "query": follow_up_prompt,
-                "session_id": SESSION_ID,
-                "user_id": 1
-            }
-            try:
-                response = requests.post(API_SEND, json=payload)
-                if response.status_code == 200:
-                    st.rerun()
-                else:
-                    st.error("Erro ao obter resposta do servidor.")
-            except Exception as e:
-                st.error(f"Erro ao enviar mensagem: {str(e)}")
+      
+        with st.spinner("Processando sua pergunta pelo Lumyn...", show_time=True):
+            follow_up_prompt = st.chat_input("Pergunte algo mais...")
+            if follow_up_prompt:
+                payload = {
+                    "query": follow_up_prompt,
+                    "session_id": SESSION_ID,
+                    "user_id": 1
+                }
+                try:
+                    response = requests.post(API_SEND, json=payload)
+                    if response.status_code == 200:
+                        st.rerun()
+                    else:
+                        st.error("Erro ao obter resposta do servidor.")
+                except Exception as e:
+                    st.error(f"Erro ao enviar mensagem: {str(e)}")
 
 main()
