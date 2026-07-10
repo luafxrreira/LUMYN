@@ -1,4 +1,4 @@
-from src.database.connection import create_connection
+from src.database.mysql_connection import create_connection
 import mysql.connector
 
 def save_message_db(user_id, session_id, user_role, content):

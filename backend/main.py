@@ -2,7 +2,7 @@ from flask import Flask
 from dotenv import load_dotenv
 
 from src.config.config import get_api_key
-from src.database.connection import create_connection
+from src.database.mysql_connection import create_connection
 from src.controllers.chat_controller import chat
 
 load_dotenv()
