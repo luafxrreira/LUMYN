@@ -1,49 +1,91 @@
-# Chat CLI com LLM (OpenRouter API)
+![Status](https://img.shields.io/badge/status-in%20progress-yellow?style=for-the-badge&logo=github)
 
-Um chatbot de linha de comando que se conecta a um modelo de linguagem (LLM) via API da OpenRouter, mantendo o histórico da conversa para gerar respostas com contexto.
+# LUMYN
 
-## Objetivo
+O **Lumyn** é um assistente de inteligência artificial contextualizado que utiliza a técnica de **Retrieval-Augmented Generation** para responder a dúvidas com base em documentos customizados. O projeto conta com uma arquitetura dividida em microsserviços, histórico de conversas persistente e isolamento de sessões web.
+<p align="center">
+  <img src="./docs/demo.png" alt="Demo do chat LUMYN" width="700">
+</p>
 
-Projeto criado para aplicar na prática conceitos de integração com LLMs: chamadas de API, gerenciamento de histórico de conversa (contexto), e tratamento de erros de rede/API — a base necessária antes de evoluir para técnicas mais avançadas como RAG e prompt engineering estruturado.
+## Estrutura do projeto
+```
+LUMYN/
+├── backend/
+│   ├── src/
+│   │   ├── config/            # Verificação da chave de API
+│   │   ├── controllers/       # Rotas da API Flask
+│   │   ├── dao/               # Acesso ao banco de dados MySQL
+│   │   ├── database/          # Conexão com o banco
+│   │   ├── knowledge_base/    # Processamento e embeddings para RAG
+│   │   └── services/          # Lógica de integração com a IA
+│   ├── Dockerfile
+│   ├── main.py
+│   └── requirements.txt
+├── frontend/
+│   ├── index.py               # Interface Streamlit
+│   ├── Dockerfile
+│   └── requirements.txt
+├── docker-compose.yml
+└── README.md
+```
 
 ## Funcionalidades
 
-- Conversa contínua com um modelo de LLM via terminal
-- Histórico de mensagens mantido em memória e enviado a cada requisição, para que o modelo tenha contexto das perguntas anteriores
-- Comando `histórico` para visualizar as mensagens trocadas até o momento
-- Comando `sair` para encerrar a conversa
-- Tratamento de erros de conexão (rede) e de resposta da API (status code diferente de 200), removendo do histórico mensagens que não obtiveram resposta válida, para manter o contexto consistente
+* Chat conversacional com histórico persistente por sessão
+* Integração com banco vetorial local para processamento, quebra e armazenamento de embeddings de documentos locais, servindo de contexto para as respostas da LLM.
+* Busca semântica via ChromaDB e embeddings (HuggingFace `sentence-transformers`)
+* Geração dinâmica de UUIDs por aba do navegador no frontend, garantindo que o histórico de chat de um usuário seja isolado e privado.
+* Armazenamento das mensagens de chat (usuário e assistente) em banco de dados relacional MySQL.
+* Toda a aplicação (Frontend, Backend, Banco Vetorial e Banco Relacional) funciona de forma isolada e integrada via Docker Compose.
+
+## Fluxo de mensagem
+
+1. O usuário envia uma pergunta pela interface do Streamlit.
+2. O backend Flask salva a mensagem no MySQL e busca o histórico da conversa.
+3. O ChromaDB é consultado por similaridade semântica, recuperando trechos relevantes da base de conhecimento.
+4. O contexto recuperado é injetado no prompt enviado à API da OpenRouter.
+5. A resposta da IA é salva no banco e devolvida ao frontend.
+
 
 ## Tecnologias utilizadas
 
-- Python
-- [Requests](https://docs.python-requests.org/) — chamadas HTTP
-- [python-dotenv](https://pypi.org/project/python-dotenv/) — variáveis de ambiente
-- [OpenRouter API](https://openrouter.ai/) — acesso a modelos de LLM
+- **Frontend:** Streamlit (Python)
+- **Backend:** Flask (Python)
+- **Banco relacional:** MySQL
+- **Banco vetorial:** ChromaDB
+- **Organização:** Docker e Docker Compose
+- **API de IA:** OpenRouter API
 
-## Como rodar
+## Pré-requisitos
 
-1. Clone o repositório
-2. Instale as dependências em um ambiente virtual:
+- Docker e Docker compose
+- Chave de API do OpenRouter
+
+## Como executar no modo desenvolvimento
+
+1. Clone o repositório e mude o diretório
    ```bash
-   (venv) pip install requests python-dotenv
+   git clone https://github.com/luafxrreira/lumyn.git
+   cd lumyn
    ```
-3. Copie o arquivo `.env.example` para `.env` e adicione sua chave de API:
+
+2. Copie o arquivo `.env.example` para `.env` e altere sua chave de API e informações do banco de dados:
    ```bash
    cp .env.example .env
    ```
-   ```
-   API_KEY=sua_chave_aqui
-   ```
-4. Execute o script:
+
+3. Na raiz do projeto, ative os containers do Docker:
    ```bash
-   python ai-study/chat.py
+   docker compose up -d
    ```
 
-## Comandos disponíveis durante a conversa
+4. Acesse a aplicação:
+- Frontend: `http://localhost:8501`
+- Backend: `http://localhost:5001`
 
-| Comando | Ação |
-|---|---|
-| `sair` | Encerra o chat |
-| `historico` | Exibe todas as mensagens trocadas até o momento |
-| qualquer outro texto | Envia a pergunta ao modelo |
+# Info: padrão de commits
+O projeto adota a padronização Conventional Commits para manter o histórico de desenvolvimento organizado.
+- **feat**: uma nova funcionalidade.
+- **fix**: correção de bug.
+- **refactor**: melhora a estrutura de código sem a adição de novas funcionalidades.
+- **chore**: mudança de configuração ou ferramentas de build. 
