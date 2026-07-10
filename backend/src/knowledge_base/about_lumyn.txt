@@ -1,0 +1,28 @@
+O LUMYN é um assistente de chat desenvolvido com Streamlit no frontend e Flask no backend.
+O sistema utiliza um banco de dados MySQL para armazenar o histórico de conversas de cada usuário,
+identificado por um session_id.
+
+Arquitetura do projeto:
+- Frontend: Streamlit, responsável pela interface de chat com o usuário.
+- Backend: Flask, expõe as rotas /chat/send (POST) e /chat/history (GET).
+- Banco de dados: MySQL, rodando em um container Docker, armazena a tabela chat_history
+  com as colunas id, user_id, session_id, user_role, content e timestamp.
+- Modelo de IA: as respostas são geradas através da API da OpenRouter, usando o endpoint
+  de chat completions.
+- O backend e o frontend do Lumyn são desenvolvidos em Python, utilizando o framework Flask e a biblioteca Streamlit.
+
+Fluxo de uma mensagem:
+1. O usuário digita uma pergunta no campo de chat do Streamlit.
+2. O frontend envia a pergunta para a rota /chat/send do backend, junto com o session_id
+   e o user_id.
+3. O backend salva a mensagem do usuário no banco de dados.
+4. O backend busca o histórico da conversa e envia para a API da OpenRouter.
+5. A resposta da IA é salva no banco de dados e retornada para o frontend.
+6. O frontend atualiza a tela buscando o histórico completo na rota /chat/history.
+
+Boas práticas do projeto:
+- Sempre rodar o backend e o banco de dados via Docker Compose, para evitar conflitos
+  de porta com instalações locais de MySQL.
+- O arquivo docker-compose.yml define os serviços backend, db_mysql e frontend.
+- As variáveis de ambiente sensíveis (senhas de banco, chave de API) ficam no arquivo .env,
+  que não deve ser versionado no controle de código.
