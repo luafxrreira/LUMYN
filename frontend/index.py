@@ -1,14 +1,22 @@
 import streamlit as st
-import requests, os
+import requests, os, uuid
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5001")
 
 API_SEND = f"{BACKEND_URL}/chat/send"
 API_HISTORY = f"{BACKEND_URL}/chat/history"
-SESSION_ID = "default"
 REQUEST_TIMEOUT = 15
 
 def main():
+
+    st.set_page_config(page_title="Lumyn - Chat AI", page_icon=":robot:", layout="wide")
+
+    if "session_id" not in st.session_state:
+        st.session_state["session_id"] = str(uuid.uuid4())
+    
+    actual_session_id = st.session_state.session_id
+    response = requests.get(f"{BACKEND_URL}/session", params={"session_id" : actual_session_id}, timeout=REQUEST_TIMEOUT)
+
     if "page" not in st.session_state:
         st.session_state["page"] = "home"
 
@@ -31,7 +39,7 @@ def main():
         if initial_prompt:
             payload = {
                 "query": initial_prompt,
-                "session_id": SESSION_ID,
+                "session_id": actual_session_id,
                 "user_id": 1
             }
             with st.spinner("Processando sua pergunta pelo Lumyn...", show_time=True):
@@ -58,7 +66,7 @@ def main():
 
         messages = []
         try:
-            response = requests.get(API_HISTORY, params={"session_id": SESSION_ID}, timeout=REQUEST_TIMEOUT)
+            response = requests.get(API_HISTORY, params={"session_id": actual_session_id}, timeout=REQUEST_TIMEOUT)
             if response.status_code == 200:
                 data_obtained = response.json()
                 messages = data_obtained.get("historico", [])
@@ -81,7 +89,7 @@ def main():
             if follow_up_prompt:
                 payload = {
                     "query": follow_up_prompt,
-                    "session_id": SESSION_ID,
+                    "session_id": actual_session_id,
                     "user_id": 1
                 }
                 with st.spinner("Processando sua pergunta pelo Lumyn...", show_time=True):
@@ -93,4 +101,6 @@ def main():
                             st.error("Erro ao obter resposta do servidor.")
                     except Exception as e:
                         st.error(f"Erro ao enviar mensagem: {str(e)}")
-main()
+
+if __name__ == "__main__":
+    main()
