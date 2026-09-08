@@ -25,7 +25,7 @@ def send_message():
         if not history_update:
             history_update = [{"role": "user", "content": query}]
 
-        ai_response = send_message_api_logic(history_update)
+        ai_response = send_message_api_logic(history_update, session_id=session_id)
         if ai_response:
             save_message_db(user_id, session_id, "assistant", ai_response)
 
@@ -58,3 +58,32 @@ def get_history():
         
     except Exception as e:
         return jsonify({"erro": f"Erro ao buscar histórico: {str(e)}"}), 500    
+
+@chat.route('/session', methods=['POST', 'GET'])
+def start_session():
+    try:
+        # FLUXO GET
+        if request.method == 'GET':
+            session_id = request.args.get('session_id')
+            if not session_id:
+                return jsonify({"erro": "O campo 'session_id' é obrigatório."}), 400
+
+            history = search_history_db(session_id)
+            if not history:
+                return jsonify({"mensagem": "Sessão iniciada com sucesso.", "session_id": session_id, "historico": []}), 200
+            return jsonify({"mensagem": "Sessão existente encontrada.", "session_id": session_id, "historico": history}), 200
+
+        # FLUXO POST
+        data = request.get_json() or {}
+        session_id = data.get('session_id', 'default')
+        user_id = data.get('user_id', 1)
+
+        save_message_db(user_id, session_id, "system", "Sessão iniciada.")
+
+        return jsonify({
+            "mensagem": "Sessão iniciada com sucesso.", 
+            "session_id": session_id
+            }), 200
+
+    except Exception as e:
+        return jsonify({"erro": f"Erro ao iniciar sessão: {str(e)}"}), 500

@@ -3,9 +3,11 @@ import requests, os, uuid
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5001")
 
+API_SESSION = f"{BACKEND_URL}/chat/session"
 API_SEND = f"{BACKEND_URL}/chat/send"
 API_HISTORY = f"{BACKEND_URL}/chat/history"
 REQUEST_TIMEOUT = 15
+SEND_TIMEOUT = 90
 
 def main():
 
@@ -15,7 +17,6 @@ def main():
         st.session_state["session_id"] = str(uuid.uuid4())
     
     actual_session_id = st.session_state.session_id
-    response = requests.get(f"{BACKEND_URL}/session", params={"session_id" : actual_session_id}, timeout=REQUEST_TIMEOUT)
 
     if "page" not in st.session_state:
         st.session_state["page"] = "home"
@@ -29,10 +30,9 @@ def main():
             """
         )
         st.markdown("---")
+        
         with st.container(height=500, border=False):
             st.write("### Escreva, interaja, converse e tire dúvidas com o Lumyn.")
-        
-            
             st.markdown(":gray-badge[Caso a resposta tenha algum problema de tempo excedido, por favor, tente enviá-la novamente.]")
 
         initial_prompt = st.chat_input("Qual é o país com mais copas vencidas?")
@@ -44,7 +44,8 @@ def main():
             }
             with st.spinner("Processando sua pergunta pelo Lumyn...", show_time=True):
                 try:
-                    response = requests.post(API_SEND, json=payload, timeout=REQUEST_TIMEOUT)
+                    requests.get(API_SESSION, params={"session_id": actual_session_id}, timeout=REQUEST_TIMEOUT)
+                    response = requests.post(API_SEND, json=payload, timeout=SEND_TIMEOUT)
                     if response.status_code == 200:
                         st.session_state["page"] = "chat"
                         st.rerun()
@@ -85,22 +86,22 @@ def main():
                     with st.chat_message(role):
                         st.write(content)
       
-            follow_up_prompt = st.chat_input("Pergunte algo mais...")
-            if follow_up_prompt:
-                payload = {
-                    "query": follow_up_prompt,
-                    "session_id": actual_session_id,
-                    "user_id": 1
-                }
-                with st.spinner("Processando sua pergunta pelo Lumyn...", show_time=True):
-                    try:
-                        response = requests.post(API_SEND, json=payload)
-                        if response.status_code == 200:
-                            st.rerun()
-                        else:
-                            st.error("Erro ao obter resposta do servidor.")
-                    except Exception as e:
-                        st.error(f"Erro ao enviar mensagem: {str(e)}")
+        follow_up_prompt = st.chat_input("Pergunte algo mais...")
+        if follow_up_prompt:
+            payload = {
+                "query": follow_up_prompt,
+                "session_id": actual_session_id,
+                "user_id": 1
+            }
+            with st.spinner("Processando sua pergunta pelo Lumyn...", show_time=True):
+                try:
+                    response = requests.post(API_SEND, json=payload, timeout=SEND_TIMEOUT)
+                    if response.status_code == 200:
+                        st.rerun()
+                    else:
+                        st.error("Erro ao obter resposta do servidor.")
+                except Exception as e:
+                    st.error(f"Erro ao enviar mensagem: {str(e)}")
 
 if __name__ == "__main__":
     main()

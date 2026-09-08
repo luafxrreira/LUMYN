@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from src.config.config import get_api_key
 from src.database.mysql_connection import create_connection
 from src.controllers.chat_controller import chat
+from src.controllers.metrics_controller import metrics
 
 load_dotenv()
 
@@ -13,6 +14,7 @@ get_api_key()
 create_connection()
 
 app.register_blueprint(chat, url_prefix='/chat')
+app.register_blueprint(metrics, url_prefix='/metrics')
 
 if __name__ == "__main__":
     try:
