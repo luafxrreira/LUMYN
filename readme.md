@@ -2,7 +2,7 @@
 
 # LUMYN
 
-O **Lumyn** é um assistente de inteligência artificial contextualizado que utiliza a técnica de **Retrieval-Augmented Generation** para responder a dúvidas com base em documentos customizados. O projeto conta com uma arquitetura dividida em microsserviços, histórico de conversas persistente e isolamento de sessões web.
+O **Lumyn** é um assistente de inteligência artificial contextualizado que utiliza a técnica de **Retrieval-Augmented Generation** para responder a dúvidas com base em conhecimento local. O projeto conta com uma arquitetura em serviços (frontend, backend e banco de dados) orquestrada com Docker Compose, histórico de conversas persistente e isolamento de sessões web.
 <p align="center">
   <img src="./docs/demo.png" alt="Demo do chat LUMYN" width="700">
 </p>
@@ -17,6 +17,7 @@ LUMYN/
 │   │   ├── dao/               # Acesso ao banco de dados MySQL
 │   │   ├── database/          # Conexão com o banco
 │   │   ├── knowledge_base/    # Processamento e embeddings para RAG
+│   │   └── scripts/           # ETL em Pandas (agrega métricas do RAG em CSV)
 │   │   └── services/          # Lógica de integração com a IA
 │   ├── Dockerfile
 │   ├── main.py
@@ -32,11 +33,11 @@ LUMYN/
 ## Funcionalidades
 
 * Chat conversacional com histórico persistente por sessão
-* Integração com banco vetorial local para processamento, quebra e armazenamento de embeddings de documentos locais, servindo de contexto para as respostas da LLM.
+* Processamento, divisão em chunks e armazenamento de embeddings da base de conhecimento local no ChromaDB, servindo de contexto para as respostas da LLM.
 * Busca semântica via ChromaDB e embeddings (HuggingFace `sentence-transformers`)
-* Geração dinâmica de UUIDs por aba do navegador no frontend, garantindo que o histórico de chat de um usuário seja isolado e privado.
+* Geração dinâmica de UUIDs por aba do navegador no frontend, isolando o histórico de chat por sessão.
 * Armazenamento das mensagens de chat (usuário e assistente) em banco de dados relacional MySQL.
-* Toda a aplicação (Frontend, Backend, Banco Vetorial e Banco Relacional) funciona de forma isolada e integrada via Docker Compose.
+* Frontend, Backend, e MySQL funcionam de forma isolada e integrada via Docker Compose, com o ChromaDB embutido no backend.
 
 ## Fluxo de mensagem
 
@@ -58,7 +59,7 @@ LUMYN/
 
 ## Pré-requisitos
 
-- Docker e Docker compose
+- Docker e Docker Compose
 - Chave de API do OpenRouter
 
 ## Como executar no modo desenvolvimento
@@ -83,7 +84,7 @@ LUMYN/
 - Frontend: `http://localhost:8501`
 - Backend: `http://localhost:5001`
 
-# Info: padrão de commits
+## Info: padrão de commits
 O projeto adota a padronização Conventional Commits para manter o histórico de desenvolvimento organizado.
 - **feat**: uma nova funcionalidade.
 - **fix**: correção de bug.
